@@ -73,7 +73,7 @@ CREATE TABLE public.blogs (
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (id),
 	user_id INT,
-	CONSTRAINT fk_user
+	CONSTRAINT fk_user_blog
 		FOREIGN KEY (user_id)
 		REFERENCES public.users(id)
 		ON DELETE SET NULL
@@ -87,15 +87,16 @@ CREATE TABLE public.comments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (id),
 	blog_id INT NOT NULL,
-	CONSTRAINT fk_blog
+	CONSTRAINT fk_blog_comment
 		FOREIGN KEY (blog_id)
 		REFERENCES public.blogs(id)
 		ON DELETE CASCADE,
-	user_id INT NOT NULL,
-	CONSTRAINT fk_user
+	user_id INT, -- TODO: REMOVE NOT NULL, generate dummy comments with null user_id
+	CONSTRAINT fk_user_comment
 		FOREIGN KEY (user_id)
 		REFERENCES public.users(id)
-		ON DELETE CASCADE
+		-- TODO: ON DELETE SET NULL SO THAT COMMENT DOESN'T NEED USER
+		ON DELETE SET NULL
 );
 
 ALTER TABLE public.comments OWNER TO postgres;
@@ -110,11 +111,11 @@ CREATE TABLE public.blog_likes (
 	blog_id INT NOT NULL,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (user_id, blog_id),
-	CONSTRAINT fk_user
+	CONSTRAINT fk_user_blog_likes
 		FOREIGN KEY (user_id)
 		REFERENCES public.users(id)
 		ON DELETE CASCADE,
-	CONSTRAINT fk_blog
+	CONSTRAINT fk_blog_blog_likes
 		FOREIGN KEY (blog_id)
 		REFERENCES public.blogs(id)
 		ON DELETE CASCADE
@@ -130,11 +131,11 @@ CREATE TABLE public.comment_likes (
 	comment_id INT NOT NULL,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (user_id, comment_id),
-	CONSTRAINT fk_user
+	CONSTRAINT fk_user_comment_likes
 		FOREIGN KEY (user_id)
 		REFERENCES public.users(id)
-		ON DELETE CASCADE,
-	CONSTRAINT fk_comment
+		ON DELETE SET NULL,
+	CONSTRAINT fk_comment_comment_likes
 		FOREIGN KEY (comment_id)
 		REFERENCES public.comments(id)
 		ON DELETE CASCADE

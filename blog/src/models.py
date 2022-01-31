@@ -24,17 +24,22 @@ class User(db.Model):
     email = db.Column(db.String(128), unique=True)
 
     blogs = db.relationship('Blog', backref='user', cascade="all,delete")
+    comments = db.relationship('Comment', backref='user', cascade="all,delete")
 
-    def __init__(self, username: str, password: str):
+    def __init__(self, username: str, password: str, fullname: str = None, email: str = None):
         self.username = username
         self.password = password
+        self.fullname = fullname
+        self.email = email
 
     # TODO: Add more attributes to serialize
     def serialize(self):
         return {
             'id': self.id,
             'username': self.username,
-            'joined': self.created_at.isoformat(),
+            'joined': self.joined.isoformat(),
+            'fullname': self.fullname,
+            'email': self.email
         }
 
 
@@ -70,7 +75,8 @@ class Blog(db.Model):
         default=datetime.datetime.utcnow,
         nullable=False
     )
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))  # nullable to allow user deletion
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
     blog_likes = db.relationship(
         'User', secondary=blog_likes_table,
         lazy='subquery',
@@ -123,15 +129,12 @@ class Comment(db.Model):
         default=datetime.datetime.utcnow,
         nullable=False
     )
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))  # nullable to allow user deletion
-    comment_likes = db.relationship(
-        'User', secondary=comment_likes_table,
-        lazy='subquery',
-        backref=db.backref('liked_comments', lazy=True)
-    )
+    blog_id = db.Column(db.Integer, db.ForeignKey('blogs.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    def __init__(self, content: str, user_id: int):
+    def __init__(self, content: str, blog_id: int, user_id: int):
         self.content = content
+        self.blog_id = blog_id
         self.user_id = user_id
 
     def serialize(self):
@@ -139,5 +142,6 @@ class Comment(db.Model):
             'id': self.id,
             'content': self.content,
             'created_at': self.created_at.isoformat(),
+            'blog_id': self.blog_id,
             'user_id': self.user_id
         }
