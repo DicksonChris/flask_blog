@@ -31,8 +31,9 @@ def create_app(test_config=None):
     db.init_app(app)
     migrate = Migrate(app, db)
 
-    from .api import users, blogs
+    from .api import users, blogs, comments
     app.register_blueprint(users.bp)
     app.register_blueprint(blogs.bp)
+    app.register_blueprint(comments.bp)
 
     return app

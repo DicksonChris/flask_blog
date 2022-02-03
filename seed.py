@@ -61,8 +61,8 @@ def main():
 
 def insert_comments(fake, last_blog, last_user):
     last_comment = None  # save last comment
+    count = 1
     for _ in range(COMMENT_COUNT):
-        count = 1
         if count % 19 == 0:
             last_comment = Comment(
                 content=fake.sentence(),

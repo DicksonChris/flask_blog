@@ -35,7 +35,6 @@ def create():
     if 'username' not in request.json or 'password' not in request.json:
         return abort(400)
 
-    print('>>> ', str(request.json['username']))
     # The username value must be at least 3 characters long. Else, abort 400
     if len(request.json['username']) < 3:
         return abort(400)
@@ -51,8 +50,9 @@ def create():
         username=request.json['username'],
         # hash and salt password before storage
         password=scramble(request.json['password']),
-        fullname=request.json['fullname'],
-        email=request.json['email']
+        # Set null for missing attributes.
+        fullname=None if 'fullname' not in request.json else request.json['fullname'],
+        email=None if 'email' not in request.json else request.json['email']
     )
 
     db.session.add(user)  # prepare CREATE statement
@@ -94,10 +94,13 @@ def update(id: int):
         # TODO fullname can't be only whitespace
         if len(request.json['fullname']) == 0:
             user.fullname = None
-        user.fullname = request.json['fullname']
+        else:
+            user.fullname = request.json['fullname']
     # Handle email
-    # TODO verify email structure
     if 'email' in request.json:
+        # TODO validate email
+        if len(request.json['email']) < 5:
+            return abort(400)
         user.email = request.json['email']
 
     db.session.commit()  # execute CREATE statement

@@ -68,18 +68,23 @@ def liking_users(id: int):
     return jsonify(result)  # return JSON response
 
 
-# Bonus Task 1: Implement like endpoint TODO: Should be implemented in /blogs/:blog
-@bp.route('/<int:id>/like', methods=['POST']) # TODO: PUT instead of POST?
+# Bonus Task 1: Implement like endpoint
+@bp.route('/<int:id>/like', methods=['POST'])
 def like(id: int):
-    # check that a blog_id is provided abort if not
+    # Verify blog exists
+    Blog.query.get_or_404(id)
+
+    # Check that a user_id is provided abort if not
     if 'user_id' not in request.json:
         return abort(400)
-    u = User.query.get_or_404(id)
-    liked_blog = Blog.query.get_or_404(request.json['blog_id'])
-    stmt = sqlalchemy.insert(blog_likes_table).values(
-        user_id=id, blog_id=request.json['blog_id'])
+    # Verify user exists
+    User.query.get_or_404(request.json['user_id'])
 
-    # add like record to likes table
+    stmt = sqlalchemy.insert(blog_likes_table).values(
+        user_id=request.json['user_id'], blog_id=id
+    )
+
+    # add like record to blog_likes_table
     try:
         db.session.execute(stmt)
         db.session.commit()
@@ -89,18 +94,17 @@ def like(id: int):
 
 
 # Bonus Task 2: Implement Unlike endpoint
-@bp.route('/<int:user_id>/unlike/<int:blog_id>', methods=['DELETE'])
-def unlike(user_id: int, blog_id: int):
-    # Check if user and blog exist
-    User.query.get_or_404(user_id)
+@bp.route('/<int:blog_id>/unlike/<int:user_id>', methods=['DELETE'])
+def unlike(blog_id: int, user_id: int):
+    # Check if blog and user exist
     Blog.query.get_or_404(blog_id)
-
+    User.query.get_or_404(user_id)
+    # Deletes record from blog_likes_table intermediate table
     stmt = sqlalchemy.delete(blog_likes_table).where(sqlalchemy.and_(
         blog_likes_table.c.user_id == user_id,
         blog_likes_table.c.blog_id == blog_id)
     )
-
-    # remove like record from likes table
+    # Remove like record from likes table
     try:
         db.session.execute(stmt)
         db.session.commit()

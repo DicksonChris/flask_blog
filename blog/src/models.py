@@ -32,7 +32,6 @@ class User(db.Model):
         self.fullname = fullname
         self.email = email
 
-    # TODO: Add more attributes to serialize
     def serialize(self):
         return {
             'id': self.id,
